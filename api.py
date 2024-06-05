@@ -7,11 +7,11 @@ app = flask.Flask(__name__)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET": 
-        pass
+        return "Hello"
     else:
         json = request.get_json()
 
-@app.route("/embed", method=["GET", "POST"]) 
+@app.route("/embed", methods=["GET", "POST"]) 
 def embed():
     pass
 
