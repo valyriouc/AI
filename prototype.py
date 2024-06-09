@@ -17,4 +17,15 @@ col.add(ids=["id1", "id2"], documents=["Hello my friend, we are going to die!", 
 
 result = col.get(ids=["id1", "id2"], include=["embeddings"])
 print(result)
+
+print(client.list_collections())
+
+olla = ollama.Client("localhost")
+
+query = input("Type in your question? ")
+query_embeddings = ollama.embeddings("llama3", prompt=query)["embedding"]
+
+result = col.query(query_texts=query, include=["embeddings"])
+
+print(result)
 col.delete(ids=["id1", "id2"])
