@@ -1,6 +1,7 @@
 import ollama
 import chromadb
 
+# TODO: Wrap this up into a usable application
 class LocalOllamaEmbedding(chromadb.EmbeddingFunction):
     def __init__(self) -> None:
         pass
