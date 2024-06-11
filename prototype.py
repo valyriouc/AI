@@ -4,12 +4,13 @@ import chromadb
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-loader = PyPDFLoader("C:/Hackerspace/Books/Business/Adam2020_Book_Blockchain-TechnologieFürUnter.pdf")
+def load_document(path: str): 
+    loader = PyPDFLoader(path)
 
-documents = loader.load()
+    documents = loader.load()
 
-split = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-documents = split.split_documents(documents=documents)
+    split = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    documents = split.split_documents(documents=documents)
 
 # TODO: Wrap this up into a usable application
 class LocalOllamaEmbedding(chromadb.EmbeddingFunction):
@@ -20,21 +21,27 @@ class LocalOllamaEmbedding(chromadb.EmbeddingFunction):
         embeddings = [ollama.embeddings("llama3", prompt=doc)["embedding"] for doc in input]
         print(len(embeddings))
         return embeddings
+    
+def update_database(client, documents):
+    col = client.get_or_create_collection(name="books")
 
-client = chromadb.PersistentClient(path="./testing")
-col = client.get_or_create_collection(name="books", embedding_function=LocalOllamaEmbedding())
+    ids = [f"id{i}" for i in range(0, len(documents))]
+    col.add(ids=ids, documents=[i.page_content for i in documents])
 
-ids = [f"id{i}" for i in range(0, len(documents))]
-col.add(ids=ids, documents=[i.page_content for i in documents])
 
-olla = ollama.Client("localhost")
+def main():
+    client = chromadb.PersistentClient(path="./testing")
+    olla = ollama.Client("localhost")
 
-query = input("Type in your question? ")
-query_embeddings = ollama.embeddings("llama3", prompt=query)["embedding"]
+    query = input("Type in your question? ")
+    query_embeddings = ollama.embeddings("llama3", prompt=query)["embedding"]
 
-result = col.query(query_texts=query)
+    col = client.get_collection(name="books")
+    result = col.query(query_texts=query)
 
-result = ollama.generate(model="llama3", prompt=f'Please generate a response for the question {query} based on the following context {result["documents"]}')
+    result = ollama.generate(model="llama3", prompt=f'Please generate a response for the question {query} based on the following context {result["documents"]}')
 
-print(result)
-col.delete(ids=["id1", "id2"])
+    print(result)
+
+if __name__ == "__main__":
+    main()
