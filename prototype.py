@@ -12,13 +12,12 @@ def load_document(path: str):
     split = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     documents = split.split_documents(documents=documents)
 
-# TODO: Wrap this up into a usable application
 class LocalOllamaEmbedding(chromadb.EmbeddingFunction):
     def __init__(self) -> None:
         pass
 
     def __call__(self, input: chromadb.Documents) -> chromadb.Embeddings:
-        embeddings = [ollama.embeddings("llama3", prompt=doc)["embedding"] for doc in input]
+        embeddings = [ollama.embeddings("nomic-embed-text", prompt=doc)["embedding"] for doc in input]
         print(len(embeddings))
         return embeddings
     
@@ -27,8 +26,6 @@ def update_database(client, documents):
 
     ids = [f"id{i}" for i in range(0, len(documents))]
     col.add(ids=ids, documents=[i.page_content for i in documents])
-
-### TODO: We need a better embedding model 
 
 def main():
     client = chromadb.PersistentClient(path="./testing")
