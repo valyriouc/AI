@@ -207,18 +207,70 @@ internal struct EmbedModule : ArgsModule
 
 internal struct AskModule : ArgsModule
 {
-    public IPAddress Address => throw new NotImplementedException();
+    private static string Endpoint => "/";
 
-    public int Port => throw new NotImplementedException();
+    public IPAddress Address {get;}
+
+    public int Port {get;}
+
+    private string questions {get;}
+    private string topic {get;}
+
+    public AskModule(IPAddress addr, int port, string quest, string top) {
+        Address = addr;
+        Port = port;
+        questions = quest;
+        topic = top;
+    }
+
+    struct Payload {
+        public string Topic {get; set;}
+        public string Question {get; set; }
+    }
 
     public static ArgsModule? Parse(string[] args)
     {
-        throw new NotImplementedException();
-    }
+        (IPAddress addr, int port) = ArgsParserHelper.GetBaseConfig(args);
 
-    public Task<bool> ExecuteAsync()
+        string? topic = null;
+        string? question = null;
+        for (int i = 0; i < args.Length; i++) {
+            if (args[i] == "-t") {
+                topic = args[i+1];
+                i += 1;
+            }
+            if (args[i] == "-q") {
+                question = args[i+1];
+                i += 1;
+            }
+        }
+
+        if (topic is null) {
+            Console.WriteLine("Specify the topic with -t");
+            return null;
+        }
+
+        if (question is null) {
+            Console.WriteLine("Specify the question with -q");
+            return null;
+        }
+
+        return new AskModule(addr, port, question, topic);
+    }   
+
+    public async Task<bool> ExecuteAsync()
     {
-        throw new NotImplementedException();
+        string url = new ApiRouteBuilder(Address, Port).WithEndpoint(Endpoint).BuildUrl();
+        Console.WriteLine(url);
+        JsonContent content = JsonContent.Create<Payload>(new Payload { Topic = this.topic, Question = this.questions});
+
+        HttpClient client = new();
+
+        HttpResponseMessage res = await client.PostAsync(url, content);
+
+        Console.WriteLine(await res.Content.ReadAsStringAsync());
+
+        return true;
     }
 }
 
