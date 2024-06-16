@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace AiCommander;
@@ -165,14 +167,29 @@ internal struct EmbedModule : ArgsModule
     
         string url = new ApiRouteBuilder(Address, Port).WithEndpoint(Endpoint).BuildUrl();
         url += $"?topic={this.topic}";
+        
+        string? assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (assemblyDir is null) {
+            throw new DirectoryNotFoundException("Something went wrong retrieving the executing directory!");
+        }
+
+        string storedEmbed = Path.Combine(assemblyDir, "embedded.txt");
+        if (!File.Exists(storedEmbed)) {
+            File.Create(storedEmbed);
+        }
+
+        string[] embedded = File.ReadAllLines(storedEmbed).Select(x => x.Trim()).ToArray();
+        if (embedded.Contains(filepath)) {
+            Console.WriteLine("Document is already embedded!");
+            return false;
+        }
+        File.AppendAllLines(storedEmbed, [ filepath ]);
 
         HttpClient client = new();
 
         ByteArrayContent content = new ByteArrayContent(raw);
 
         HttpResponseMessage res = await client.PostAsync(url, content);
-
-        // TODO: Implement tracking of the embedded documents!
 
         if (res.IsSuccessStatusCode) {
             Success success = await res.Content.ReadFromJsonAsync<Success>();
