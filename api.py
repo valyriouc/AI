@@ -46,7 +46,9 @@ def index():
         pass
     elif flask.request.method == "POST":
         client = chromadb.PersistentClient()
-        return handle_question(client, flask.request.get_json()) 
+        context = flask.request.get_json()
+        print(context)
+        return handle_question(client, context)["response"]
 
 @app.route("/api/embed/", methods=["POST"]) 
 def embed():
