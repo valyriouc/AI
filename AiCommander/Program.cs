@@ -40,11 +40,12 @@ internal static class ArgsParserHelper {
         for (int i = 0; i < args.Length; i++){
             if (args[i] == "--host") {
                 addr = IPAddress.Parse(args[i+1]);
+                i += 1;
             }
             if (args[i] == "-p") {
                 port = int.Parse(args[i+1]);
+                i += 1;
             }
-            i += 1;
         }
         return (addr, port);
     }
@@ -52,7 +53,7 @@ internal static class ArgsParserHelper {
 
 internal struct ListModule : ArgsModule
 {
-    private static string Endpoint => "/api/list/collections/";
+    private static string Endpoint => "/list/collections/";
 
     public IPAddress Address {get;}
 
@@ -97,7 +98,7 @@ internal struct ListModule : ArgsModule
 
 internal struct EmbedModule : ArgsModule
 {   
-    private static string Endpoint => "/api/embed/";
+    private static string Endpoint => "/embed/";
 
     public IPAddress Address {get;}
 
@@ -120,15 +121,19 @@ internal struct EmbedModule : ArgsModule
         string? topic = null;
         string? filename = null;
 
+        Console.WriteLine(args.Length);
+
         for (int i = 0; i < args.Length; i++) {
             if (args[i] == "-t") {
+                Console.WriteLine(args[i+1]);
                 topic = args[i+1];
+                i += 1;
             }
             if (args[i] == "-f") {
                 filename = args[i+1];
+                i += 1;
             }
 
-            i += 1;
         }
 
         if (topic is null) {
@@ -173,7 +178,7 @@ internal struct EmbedModule : ArgsModule
 
         string storedEmbed = Path.Combine(assemblyDir, "embedded.txt");
         if (!File.Exists(storedEmbed)) {
-            File.Create(storedEmbed);
+            File.Create(storedEmbed).Dispose();
         }
 
         string[] embedded = File.ReadAllLines(storedEmbed).Select(x => x.Trim()).ToArray();
