@@ -40,7 +40,7 @@ def handle_question(client: chromadb.PersistentClient, context: dict):
     """
     return ollama.generate(model="llama3", prompt=prompt)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/api/", methods=["GET", "POST"])
 def index():
     if flask.request.method == "GET":
         pass
@@ -48,7 +48,7 @@ def index():
         client = chromadb.PersistentClient()
         return handle_question(client, flask.request.get_json()) 
 
-@app.route("/embed/", methods=["POST"]) 
+@app.route("/api/embed/", methods=["POST"]) 
 def embed():
     topic = flask.request.args.get("topic")
     raw_bytes = flask.request.get_data()
@@ -66,10 +66,10 @@ def embed():
     os.remove(filepath)
     return {"status": "200", "msg": "Embedded document!"}
 
-@app.route("/list/collections/", methods=["GET"])
+@app.route("/api/list/collections/", methods=["GET"])
 def list_collections():
     client = chromadb.PersistentClient()
-    return client.list_collections()
+    return [c.name for c in client.list_collections()]
 
 def parse_args(args):
     parsed = {
