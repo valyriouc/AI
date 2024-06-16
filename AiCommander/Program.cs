@@ -26,6 +26,7 @@ internal class ApiRouteBuilder {
 internal interface ArgsModule {
 
     public IPAddress Address {get;}
+    
     public int Port {get;}
 
     public abstract static ArgsModule? Parse(string[] args);
