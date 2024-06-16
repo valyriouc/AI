@@ -28,7 +28,7 @@ internal interface ArgsModule {
     public IPAddress Address {get;}
     public int Port {get;}
 
-    public abstract static ArgsModule Parse(string[] args);
+    public abstract static ArgsModule? Parse(string[] args);
 
     public Task<bool> ExecuteAsync();    
 }
@@ -52,7 +52,7 @@ internal static class ArgsParserHelper {
 
 internal struct ListModule : ArgsModule
 {
-    private static string Endpoint => "/list/collections/";
+    private static string Endpoint => "/api/list/collections/";
 
     public IPAddress Address {get;}
 
@@ -63,7 +63,7 @@ internal struct ListModule : ArgsModule
         Port = port;
     }
 
-    public static ArgsModule Parse(string[] args)
+    public static ArgsModule? Parse(string[] args)
     {
         (IPAddress addr, int port) = ArgsParserHelper.GetBaseConfig(args);
         return new ListModule(addr, port);
@@ -80,7 +80,7 @@ internal struct ListModule : ArgsModule
         if (res.IsSuccessStatusCode) {
             List<string>? collections = await res.Content.ReadFromJsonAsync<List<string>>();
             if (collections is null) {
-                Console.WriteLine("Could not parse collection!");
+                Console.WriteLine("[ERROR] Could not parse collection!");
                 return false;
             }
             foreach (string col in collections) {
@@ -90,25 +90,98 @@ internal struct ListModule : ArgsModule
             return true;
         }
 
-        Console.WriteLine("Request was not successful!");
+        Console.WriteLine("[ERROR] Request was not successful!");
         return false;
     }
 }
 
 internal struct EmbedModule : ArgsModule
-{
-    public IPAddress Address => throw new NotImplementedException();
+{   
+    private static string Endpoint => "/api/embed/";
 
-    public int Port => throw new NotImplementedException();
+    public IPAddress Address {get;}
 
-    public static ArgsModule Parse(string[] args)
-    {
-        throw new NotImplementedException();
+    public int Port {get;}  
+
+    private string topic;
+    private string filename;
+
+    public EmbedModule(IPAddress addr, int port, string topic, string filename) {
+        Address = addr;
+        Port = port;
+        this.topic = topic;
+        this.filename = filename;
     }
 
-    public Task<bool> ExecuteAsync()
+    public static ArgsModule? Parse(string[] args)
     {
-        throw new NotImplementedException();
+        (IPAddress addr, int port) = ArgsParserHelper.GetBaseConfig(args);
+
+        string? topic = null;
+        string? filename = null;
+
+        for (int i = 0; i < args.Length; i++) {
+            if (args[i] == "-t") {
+                topic = args[i+1];
+            }
+            if (args[i] == "-f") {
+                filename = args[i+1];
+            }
+
+            i += 1;
+        }
+
+        if (topic is null) {
+            Console.WriteLine("Specify the topic by using -t!");
+            return null;
+        }
+
+        if (filename is null) {
+            Console.WriteLine("Specify the filepath by using -f!");
+            return null;
+        }
+
+        return new EmbedModule(addr, port, topic, filename);
+    }
+
+    struct Success {
+        public string Status {get; set;}
+
+        public string Msg {get; set;}
+
+    }
+
+    public async Task<bool> ExecuteAsync()
+    {
+        string current = Directory.GetCurrentDirectory();
+        string filepath = Path.Combine(current, this.filename);
+
+        if (!File.Exists(filepath)) {
+            System.Console.WriteLine("Specified file for embedding does not exists!");
+            return false;
+        }
+
+        byte[] raw = await File.ReadAllBytesAsync(filepath);
+    
+        string url = new ApiRouteBuilder(Address, Port).WithEndpoint(Endpoint).BuildUrl();
+        url += $"?topic={this.topic}";
+
+        HttpClient client = new();
+
+        ByteArrayContent content = new ByteArrayContent(raw);
+
+        HttpResponseMessage res = await client.PostAsync(url, content);
+
+        // TODO: Implement tracking of the embedded documents!
+
+        if (res.IsSuccessStatusCode) {
+            Success success = await res.Content.ReadFromJsonAsync<Success>();
+            Console.WriteLine(success.Msg);
+            return true;
+        }
+
+        Console.WriteLine("The request was not successful!");
+        return false;
     }
 }
 
@@ -118,7 +191,7 @@ internal struct AskModule : ArgsModule
 
     public int Port => throw new NotImplementedException();
 
-    public static ArgsModule Parse(string[] args)
+    public static ArgsModule? Parse(string[] args)
     {
         throw new NotImplementedException();
     }
@@ -127,37 +200,6 @@ internal struct AskModule : ArgsModule
     {
         throw new NotImplementedException();
     }
-}
-
-enum CommandType {
-    Interactive,
-    Question,
-    Embed,
-    Topic,
-    List,
-}
-
-static class CommandTypeExt {
-    public static bool HasContent(this CommandType self) => self switch {
-        CommandType.Interactive => false,
-        CommandType.Question => true,
-        CommandType.Embed => true,
-        CommandType.Topic => true,
-        CommandType.List => false,
-        _ => throw new NotSupportedException("Command type is not supported!")
-    }; 
-}
-
-static class StringExtensions {
-
-    public static CommandType ToCommandType(this string self) => self switch {
-        "-i" => CommandType.Interactive,
-        "-q" => CommandType.Question,
-        "-e" => CommandType.Embed,
-        "-t" => CommandType.Topic,
-        "-l" => CommandType.List,
-        _ => throw new ArgumentException("Invalid command!")
-    };
 }
 
 class Program
