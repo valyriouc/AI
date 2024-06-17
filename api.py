@@ -46,6 +46,11 @@ def handle_question(client: chromadb.PersistentClient, context: dict):
             
             What to do when you don't no the answer:
             - Just say you can't answer the question with your available information/knowledge
+
+            What to do when getting asked to provide examples: 
+            - Try to find code samples in the given context {result['documents']}
+            - Program a simple example to show me how it can look like 
+            - Try to find simple real-world examples 
             """
     return ollama.generate(model="llama3", prompt=prompt)
 
