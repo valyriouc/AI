@@ -35,9 +35,18 @@ def handle_question(client: chromadb.PersistentClient, context: dict):
     question_emb = ollama.embeddings("nomic-embed-text", prompt=context["question"])["embedding"]
     col = client.get_collection(name=context["topic"], embedding_function=LocalOllamaEmbedding())
     result = col.query(query_embeddings=question_emb)
-    prompt = f"""
-    Please generate a repsonse for the questions {context['question']} based on the given context {result["documents"]}"
-    """
+    prompt = f"""Please provide me an answer for the question {context['question']} based on the following {result['documents']}
+            If a good answer can generated from your training data, then also use this data to answer the question. 
+            
+            How answers should be formatted:
+            - The should be very short 
+            - The should contain only the neccessary information
+            - Use bullet points if possible 
+            - Try to describe everything in a practical way (no complicated explainations)
+            
+            What to do when you don't no the answer:
+            - Just say you can't answer the question with your available information/knowledge
+            """
     return ollama.generate(model="llama3", prompt=prompt)
 
 @app.route("/api/", methods=["GET", "POST"])

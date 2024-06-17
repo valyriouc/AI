@@ -11,6 +11,19 @@ pokemons = [
     # ...
 ]
 
+prompt = """Please provide me an answer for the question {question} based on the following {context}
+            If a good answer can generated from your training data, then also use this data to answer the question. 
+            
+            How answers should be formatted:
+            - The should be very short 
+            - The should contain only the neccessary information
+            - Use bullet points if possible 
+            - Try to describe everything in a practical way (no complicated explainations)
+            
+            What to do when you don't no the answer:
+            - Just say you can't answer the question with your available information/knowledge
+            """
+
 class Pokemon(Resource):
     def get(self, id):
         if id:
@@ -52,7 +65,7 @@ class Pokemon(Resource):
         else:
             return jsonify({"error": "Invalid ID"}), 400
 
-api.add_resource(Pokemon,'/pokemons/<int:id>')
+api.add_resource(Pokemon, '/pokemons/<int:id>')
 
 if __name__ == '__main__':
     app.run(debug=True)
