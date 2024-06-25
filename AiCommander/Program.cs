@@ -106,13 +106,16 @@ internal struct EmbedModule : ArgsModule
     public int Port {get;}  
 
     private string topic;
-    private string filename;
+    private string? filename;
 
-    public EmbedModule(IPAddress addr, int port, string topic, string filename) {
+    private bool recursive;
+
+    private EmbedModule(IPAddress addr, int port, string topic, string? filename, bool recursive) {
         Address = addr;
         Port = port;
         this.topic = topic;
         this.filename = filename;
+        this.recursive = recursive;
     }
 
     public static ArgsModule? Parse(string[] args)
@@ -121,8 +124,7 @@ internal struct EmbedModule : ArgsModule
 
         string? topic = null;
         string? filename = null;
-
-        Console.WriteLine(args.Length);
+        bool recursive = false;
 
         for (int i = 0; i < args.Length; i++) {
             if (args[i] == "-t") {
@@ -134,7 +136,9 @@ internal struct EmbedModule : ArgsModule
                 filename = args[i+1];
                 i += 1;
             }
-
+            if (args[i] == "-r") {
+                recursive = true;
+            }
         }
 
         if (topic is null) {
@@ -142,12 +146,12 @@ internal struct EmbedModule : ArgsModule
             return null;
         }
 
-        if (filename is null) {
+        if (filename is null && recursive == false) {
             Console.WriteLine("Specify the filepath by using -f!");
             return null;
         }
 
-        return new EmbedModule(addr, port, topic, filename);
+        return new EmbedModule(addr, port, topic, filename, recursive);
     }
 
     struct Success {
@@ -160,8 +164,20 @@ internal struct EmbedModule : ArgsModule
     public async Task<bool> ExecuteAsync()
     {
         string current = Directory.GetCurrentDirectory();
-        string filepath = Path.Combine(current, this.filename);
+        if (this.recursive) {
+            foreach (string file in Directory.EnumerateFiles(current, "*.pdf")) {
+                Console.WriteLine($"Embed {file}");
+                string filepath = Path.Combine(current, file);
+                await ExecuteInternalAsync(filepath);
+            }
+            return true;
+        } else {
+            string filepath = Path.Combine(current, this.filename!);
+            return await ExecuteInternalAsync(filepath);
+        }
+    }
 
+    private async Task<bool> ExecuteInternalAsync(string filepath) {
         if (!File.Exists(filepath)) {
             System.Console.WriteLine("Specified file for embedding does not exists!");
             return false;
@@ -187,7 +203,6 @@ internal struct EmbedModule : ArgsModule
             Console.WriteLine("Document is already embedded!");
             return false;
         }
-        File.AppendAllLines(storedEmbed, [ filepath ]);
 
         HttpClient client = new();
 
@@ -198,10 +213,10 @@ internal struct EmbedModule : ArgsModule
         if (res.IsSuccessStatusCode) {
             Success success = await res.Content.ReadFromJsonAsync<Success>();
             Console.WriteLine(success.Msg);
+            File.AppendAllLines(storedEmbed, [ filepath ]);
             return true;
         }
 
-        Console.WriteLine("The request was not successful!");
         return false;
     }
 }

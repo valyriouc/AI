@@ -51,6 +51,15 @@ def handle_question(client: chromadb.PersistentClient, context: dict):
             - Try to find code samples in the given context {result['documents']}
             - Program a simple example to show me how it can look like 
             - Try to find simple real-world examples 
+
+            What to do when getting asked to do a programming task:
+            - Please reject this 
+            
+            What to do when you getting ask to provide a prototype solution for an idea described to you:
+            - Tell how to start out by providing links, resources, tools
+            - Provide a quick list of things to do, to setup a testing environment 
+            - Provide program code if needed 
+            - Provide explanations about the resources, links and tools you suggested
             """
     return ollama.generate(model="llama3", prompt=prompt)
 
