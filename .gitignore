@@ -1,6 +1,9 @@
 **/tmp
 **/chroma
 **/testing
-
+**/secret.py
 **/bin
 **/obj
+
+**/__pycache__
+**/logs
