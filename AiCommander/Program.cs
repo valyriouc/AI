@@ -76,6 +76,7 @@ internal struct ListModule : ArgsModule
         string url = new ApiRouteBuilder(Address, Port).WithEndpoint(Endpoint).BuildUrl();
         Console.WriteLine(url);
         HttpClient client = new HttpClient();
+        client.Timeout = TimeSpan.FromMinutes(10);
 
         HttpResponseMessage res = await client.GetAsync(url);
         
@@ -205,7 +206,7 @@ internal struct EmbedModule : ArgsModule
         }
 
         HttpClient client = new();
-
+        client.Timeout = TimeSpan.FromMinutes(10);
         ByteArrayContent content = new ByteArrayContent(raw);
 
         HttpResponseMessage res = await client.PostAsync(url, content);
