@@ -1,10 +1,12 @@
 **/tmp
 **/chroma
 **/testing
-
+**/secret.py
 **/bin
 **/obj
 
 **/.vs
 **/.idea
 **/.vscode
+**/__pycache__
+**/logs
