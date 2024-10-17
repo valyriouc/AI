@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiCommander", "AiCommander\AiCommander.csproj", "{339AA85B-0C39-4391-98B0-494D08386FBA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeminiTesting", "GeminiTesting\GeminiTesting.csproj", "{2482DD84-3532-42FE-81C4-6FE5F6DA16BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{339AA85B-0C39-4391-98B0-494D08386FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{339AA85B-0C39-4391-98B0-494D08386FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{339AA85B-0C39-4391-98B0-494D08386FBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2482DD84-3532-42FE-81C4-6FE5F6DA16BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2482DD84-3532-42FE-81C4-6FE5F6DA16BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2482DD84-3532-42FE-81C4-6FE5F6DA16BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2482DD84-3532-42FE-81C4-6FE5F6DA16BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
