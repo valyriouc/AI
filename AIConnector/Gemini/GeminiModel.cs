@@ -4,11 +4,11 @@ namespace AIConnector.Gemini;
 
 public class GeminiModel : IModel
 {
-    private GeminiModelVariant Variant { get; }
-    
+    private Uri Url { get; }
 
     public GeminiModel(GeminiModelBuilder builder)
     {
+        Url = builder.BuildUri();
         
     }
     

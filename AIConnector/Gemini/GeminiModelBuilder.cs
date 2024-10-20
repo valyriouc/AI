@@ -1,3 +1,4 @@
+using System.Text;
 using AIConnector.Common;
 
 namespace AIConnector.Gemini;
@@ -10,7 +11,7 @@ public class GeminiModelBuilder : IModelBuilder
     
     public GeminiMode GeminiMode { get; private set; }
 
-    public string ApiKey { get; private set; }
+    public string? ApiKey { get; private set; }
 
     public GeminiModelBuilder WithApiKey(string key)
     {
@@ -37,11 +38,35 @@ public class GeminiModelBuilder : IModelBuilder
 
     internal Uri BuildUri()
     {
-        return new Uri("");
+        StringBuilder sb = new StringBuilder();
+
+        sb.Append(BASEURL);
+
+        if (this.Variant == null)
+        {
+            throw new ArgumentNullException(nameof(this.Variant));
+        }
+
+        sb.Append(this.Variant.AsString());
+        
+        if (this.GeminiMode == null)
+        {
+            throw new ArgumentNullException(nameof(this.GeminiMode));
+        }
+
+        sb.Append(":");
+        sb.Append(this.GeminiMode.AsString());
+
+        if (string.IsNullOrWhiteSpace(this.ApiKey))
+        {
+            throw new ArgumentNullException(nameof(this.ApiKey));
+        }
+
+        sb.Append($"?key={this.ApiKey}");
+        
+        return new Uri(sb.ToString());
     }
-    
-    public IModel Build()
-    {
-        throw new NotImplementedException();
-    }
+
+    public IModel Build() =>
+        new GeminiModel(this);
 }
