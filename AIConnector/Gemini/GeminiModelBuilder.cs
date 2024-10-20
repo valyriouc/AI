@@ -12,6 +12,7 @@ public class GeminiModelBuilder : IModelBuilder
     public GeminiMode GeminiMode { get; private set; }
 
     public string? ApiKey { get; private set; }
+    
 
     public GeminiModelBuilder WithApiKey(string key)
     {
@@ -65,6 +66,11 @@ public class GeminiModelBuilder : IModelBuilder
         sb.Append($"?key={this.ApiKey}");
         
         return new Uri(sb.ToString());
+    }
+
+    internal HttpContent BuildContent()
+    {
+        
     }
 
     public IModel Build() =>
