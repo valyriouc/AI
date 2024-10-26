@@ -3,6 +3,8 @@
 public sealed class GeminiRequestBuilder
 {
     private List<IGeminiRequestPart> parts = new();
+    private string? role = null;
+    
     private List<GeminiSafetySetting> safetySettings = new();
     private List<string> stopSequences = new();
 
@@ -18,6 +20,17 @@ public sealed class GeminiRequestBuilder
     private bool? responseLogprobs = null;
     private int? logProbs = null;
 
+    public GeminiRequestBuilder WithRole(string role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new ArgumentNullException(nameof(role));
+        }
+
+        this.role = role;
+        return this;
+    }
+    
     public GeminiRequestBuilder AddPart(IGeminiRequestPart part)
     {
         this.parts.Add(part);
