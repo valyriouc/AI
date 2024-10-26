@@ -20,7 +20,13 @@ public enum GeminiFileMimeType
     Jpeg,
     WebP,
     Heic,
-    Heif
+    Heif,
+    Wav,
+    Mp3,
+    Aiff,
+    Aac,
+    Ogg,
+    Flac
 }
 
 internal static class GeminiFileMimeTypeExtensions
@@ -49,8 +55,15 @@ internal static class GeminiFileMimeTypeExtensions
             GeminiFileMimeType.Rtf => "text/rtf",
             GeminiFileMimeType.Png => "image/png",
             GeminiFileMimeType.Jpeg => "image/jpeg",
+            GeminiFileMimeType.WebP => "image/webp",
             GeminiFileMimeType.Heic => "image/heic",
             GeminiFileMimeType.Heif => "image/heif",
+            GeminiFileMimeType.Wav => "audio/wav",
+            GeminiFileMimeType.Mp3 => "audio/mp3",
+            GeminiFileMimeType.Aiff => "audio/aiff",
+            GeminiFileMimeType.Aac => "audio/aac",
+            GeminiFileMimeType.Ogg => "audio/ogg",
+            GeminiFileMimeType.Flac => "audio/flac",
             _ => throw new NotImplementedException(),
         };
     }
