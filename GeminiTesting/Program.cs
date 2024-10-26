@@ -11,12 +11,15 @@ internal static class Program
         string apiKey = (await File.ReadAllTextAsync(filepath)).Trim();
 
         GeminiModelBuilder builder = new GeminiModelBuilder()
-            .WithModelMode(GeminiMode.ContentGeneration)
+            .WithModelMode(GeminiMode.ContentGenerationStream)
             .WithModelVariant(GeminiModelVariant.Flash15)
             .WithApiKey(apiKey);
 
         IModel model = builder.Build();
-        string response = await model.GenerateContentAsync();
-        Console.WriteLine(response);
+        await foreach (string t in model.StreamContentAsync())
+        {
+            Console.WriteLine(t);
+            Console.WriteLine();    
+        }
     }
 }
