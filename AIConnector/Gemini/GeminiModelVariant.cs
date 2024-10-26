@@ -6,49 +6,41 @@ public enum GeminiModelVariant
     Pro15,
     Pro10,
     Embedding,
-    AQA
+    Aqa,
+    None
 }
 
 public enum GeminiMode
 {
     ContentGeneration,
     ContentGenerationStream,
-    Embed
+    Embed,
+    None
 }
 
 internal static class EnumExtensions
 {
     public static string AsString(this GeminiModelVariant self)
     {
-        switch (self)
+        return self switch
         {
-            case GeminiModelVariant.Flash15:
-                return "gemini-1.5-flash";
-            case GeminiModelVariant.Pro15:
-                return "gemini-1.5-pro";
-            case GeminiModelVariant.Pro10:
-                return "gemini-1.0-pro";
-            case GeminiModelVariant.Embedding:
-                return "text-embedding-004";
-            case GeminiModelVariant.AQA:
-                return "aqa";
-            default:
-                throw new NotSupportedException();
-        }
+            GeminiModelVariant.Flash15 => "gemini-1.5-flash",
+            GeminiModelVariant.Pro15 => "gemini-1.5-pro",
+            GeminiModelVariant.Pro10 => "gemini-1.0-pro",
+            GeminiModelVariant.Embedding => "text-embedding-004",
+            GeminiModelVariant.Aqa => "aqa",
+            _ => throw new NotSupportedException()
+        };
     }
 
     public static string AsString(this GeminiMode self)
     {
-        switch (self)
+        return self switch
         {
-            case GeminiMode.ContentGeneration:
-                return "generateContent";
-            case GeminiMode.ContentGenerationStream:
-                return "streamGenerateContent";
-            case GeminiMode.Embed:
-                return "embedContent";
-            default:
-                throw new NotSupportedException();
-        }
+            GeminiMode.ContentGeneration => "generateContent",
+            GeminiMode.ContentGenerationStream => "streamGenerateContent",
+            GeminiMode.Embed => "embedContent",
+            _ => throw new NotSupportedException()
+        };
     }
 }
