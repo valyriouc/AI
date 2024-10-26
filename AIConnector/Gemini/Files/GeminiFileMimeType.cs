@@ -15,7 +15,12 @@ public enum GeminiFileMimeType
     Markdown,
     Csv,
     Xml,
-    Rtf
+    Rtf,
+    Png,
+    Jpeg,
+    WebP,
+    Heic,
+    Heif
 }
 
 internal static class GeminiFileMimeTypeExtensions
@@ -42,6 +47,10 @@ internal static class GeminiFileMimeTypeExtensions
             GeminiFileMimeType.Csv => "text/csv",
             GeminiFileMimeType.Xml => "text/xml",
             GeminiFileMimeType.Rtf => "text/rtf",
+            GeminiFileMimeType.Png => "image/png",
+            GeminiFileMimeType.Jpeg => "image/jpeg",
+            GeminiFileMimeType.Heic => "image/heic",
+            GeminiFileMimeType.Heif => "image/heif",
             _ => throw new NotImplementedException(),
         };
     }
