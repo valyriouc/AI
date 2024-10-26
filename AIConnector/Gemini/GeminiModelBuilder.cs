@@ -5,14 +5,13 @@ namespace AIConnector.Gemini;
 
 public class GeminiModelBuilder : IModelBuilder
 {
-    private const string BASEURL = "https://generativelanguage.googleapis.com/v1beta/models/";
-
-    public GeminiModelVariant Variant { get; private set; }
+    private const string Baseurl = "https://generativelanguage.googleapis.com/v1beta/models/";
     
-    public GeminiMode GeminiMode { get; private set; }
+    private GeminiModelVariant _variant = GeminiModelVariant.None;
 
-    public string? ApiKey { get; private set; }
-    
+    private GeminiMode _geminiMode = GeminiMode.None;
+
+    private string? _apiKey;
 
     public GeminiModelBuilder WithApiKey(string key)
     {
@@ -21,19 +20,19 @@ public class GeminiModelBuilder : IModelBuilder
             throw new ArgumentNullException(nameof(key));
         }
 
-        ApiKey = key;
+        this._apiKey = key;
         return this;
     }
 
     public GeminiModelBuilder WithModelVariant(GeminiModelVariant variant)
     {
-        this.Variant = variant;
+        this._variant = variant;
         return this;
     }
 
     public GeminiModelBuilder WithModelMode(GeminiMode geminiMode)
     {
-        this.GeminiMode = geminiMode;
+        this._geminiMode = geminiMode;
         return this;
     }
 
@@ -41,36 +40,34 @@ public class GeminiModelBuilder : IModelBuilder
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append(BASEURL);
-
-        if (this.Variant == null)
-        {
-            throw new ArgumentNullException(nameof(this.Variant));
-        }
-
-        sb.Append(this.Variant.AsString());
+        sb.Append(Baseurl);
         
-        if (this.GeminiMode == null)
+        if (this._variant == GeminiModelVariant.None)
         {
-            throw new ArgumentNullException(nameof(this.GeminiMode));
+            throw new InvalidOperationException(
+                "The model variant is required in order to use gemini models.");
         }
-
+        
+        sb.Append(this._variant.AsString());
+        
+        if (this._geminiMode == GeminiMode.None)
+        {
+            throw new InvalidOperationException(
+                "The gemini mode is required in order to use gemini models.");
+        }
+        
         sb.Append(":");
-        sb.Append(this.GeminiMode.AsString());
+        sb.Append(this._geminiMode.AsString());
 
-        if (string.IsNullOrWhiteSpace(this.ApiKey))
+        if (string.IsNullOrWhiteSpace(this._apiKey))
         {
-            throw new ArgumentNullException(nameof(this.ApiKey));
+            throw new InvalidOperationException(
+                "The api key is required in order to use gemini models.");
         }
 
-        sb.Append($"?key={this.ApiKey}");
+        sb.Append($"?key={this._apiKey}");
         
         return new Uri(sb.ToString());
-    }
-
-    internal HttpContent BuildContent()
-    {
-        
     }
 
     public IModel Build() =>
