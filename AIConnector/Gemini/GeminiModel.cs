@@ -61,6 +61,18 @@ public sealed class GeminiModel : IModel
         throw new NotImplementedException();
     }
 
+    public async IAsyncEnumerable<string> StreamContentAsync()
+    {
+        using HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, Url);
+
+        message.Content = new StringContent(CreateDummyContent());
+        using HttpResponseMessage response = await Client.SendAsync(message);
+
+        await response.ThrowOnGeminiErrorAsync();
+
+        yield return await response.Content.ReadAsStringAsync();
+    }
+    
     public async IAsyncEnumerable<T> StreamContentAsync<T>()
     {
         yield break;
