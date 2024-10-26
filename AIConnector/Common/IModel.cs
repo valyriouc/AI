@@ -1,6 +1,6 @@
 namespace AIConnector.Common;
 
-public interface IModel
+public interface IModel : IDisposable
 {
     public Task<string> GenerateContentAsync();
 
