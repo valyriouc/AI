@@ -20,6 +20,25 @@ public sealed class GeminiModel : IModel
         Url = url;
     }
 
+    private string CreateDummyContent()
+    {
+        return """
+               {
+                 "contents":
+                 [
+                    {
+                        "parts":
+                        [
+                            {
+                                "text":"Explain how AI works"
+                            }
+                        ]
+                    }
+                ]
+               }
+               """;
+    }
+
     /// <summary>
     /// Asynchronously generates content using the Gemini model.
     /// </summary>
@@ -29,6 +48,7 @@ public sealed class GeminiModel : IModel
     {
         using HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, Url);
 
+        message.Content = new StringContent(CreateDummyContent());
         using HttpResponseMessage response = await Client.SendAsync(message);
 
         await response.ThrowOnGeminiErrorAsync();
@@ -41,6 +61,11 @@ public sealed class GeminiModel : IModel
         throw new NotImplementedException();
     }
 
+    public async IAsyncEnumerable<T> StreamContentAsync<T>()
+    {
+        yield break;
+    }
+    
     public void Dispose()
     {   
         this.Client.Dispose();
