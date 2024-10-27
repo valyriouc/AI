@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 using AIConnector.Common;
 
 namespace AIConnector.Gemini.Files;
@@ -12,6 +14,20 @@ public sealed class GeminiFileUploader(
 
     private readonly HttpClient _httpClient = new();
 
+    [method: JsonConstructor]
+    private readonly struct SingleMetaWrapper(GeminiFileMetadata file)
+    {
+        [JsonPropertyName("file")]
+        public GeminiFileMetadata File { get; } = file;
+    }
+
+    [method: JsonConstructor]
+    private readonly struct MultiMetaWrapper(IEnumerable<GeminiFileMetadata> files)
+    {
+        [JsonPropertyName("files")]
+        public IEnumerable<GeminiFileMetadata> Files { get; } = files;
+    }
+    
     /// <summary>
     /// Uploads a file asynchronously to the gemini file API.
     /// </summary>
@@ -19,7 +35,7 @@ public sealed class GeminiFileUploader(
     /// <param name="cancellationToken">Token for cancellation.</param>
     /// <returns>A task that represents the asynchronous operation, containing the file metadata.</returns>
     /// <exception cref="GeminiApiException">Thrown when there is an error during the upload process.</exception>
-    public async Task<string> UploadFileAsync(
+    public async Task<GeminiFileMetadata> UploadFileAsync(
         GeminiFile file,
         CancellationToken cancellationToken)
     {
@@ -57,8 +73,10 @@ public sealed class GeminiFileUploader(
                 "Uploading content failed!");
         }
         
-        return await finalize.Content
-            .ReadAsStringAsync(cancellationToken);
+        var result = await finalize.Content
+            .ReadFromJsonAsync<SingleMetaWrapper>(cancellationToken);
+
+        return result.File;
     }
 
     private HttpRequestMessage CreateInitUploadRequest(GeminiFile file)
@@ -86,11 +104,14 @@ public sealed class GeminiFileUploader(
             """;
 
         request.Content = new StringContent(json);
-        request.Content!.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+        request.Content!.Headers.ContentType = MediaTypeHeaderValue
+            .Parse("application/json");
         return request;
     }
 
-    private HttpRequestMessage CreateFinalizeUploadRequest(string baseUrl, GeminiFile file)
+    private HttpRequestMessage CreateFinalizeUploadRequest(
+        string baseUrl, 
+        GeminiFile file)
     {
         HttpRequestMessage message = new HttpRequestMessage(
             HttpMethod.Post, 
@@ -100,33 +121,49 @@ public sealed class GeminiFileUploader(
         message.Headers.Add("X-Goog-Upload-Offset", "0");
         message.Headers.Add("X-Goog-Upload-Command", "upload, finalize");
         
-        message.Content = new ByteArrayContent(file.FileBytes.ToArray());
+        message.Content = new ByteArrayContent(
+            file.FileBytes.ToArray());
+        
         return message;
     }
 
-    public async Task<string> GetFileMetadataAsync(string filename, CancellationToken cancellationToken)
+    private async Task<GeminiFileMetadata> GetFileMetadataAsync(
+        string filename, 
+        CancellationToken cancellationToken)
     {
         using HttpResponseMessage response = await _httpClient.GetAsync(
-            $"{FileUrl}?key={apiKey}", 
+            $"{FileUrl}/{filename}/", 
             cancellationToken);
 
         await response.ThrowOnGeminiErrorAsync();
-        
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+
+        SingleMetaWrapper result = await response.Content
+            .ReadFromJsonAsync<SingleMetaWrapper>(cancellationToken);
+
+        return result.File;
     }
 
-    public async Task<string> ListFilesAsync(CancellationToken cancellationToken)
+    public async IAsyncEnumerable<GeminiFileMetadata> ListFilesAsync(
+        CancellationToken cancellationToken)
     {
         using HttpResponseMessage response = await _httpClient.GetAsync(
             $"{FileUrl}?key={apiKey}",
             cancellationToken);
 
         await response.ThrowOnGeminiErrorAsync();
-        
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var r =await response.Content
+            .ReadFromJsonAsync<MultiMetaWrapper>(cancellationToken);
+
+        foreach (GeminiFileMetadata file in r.Files)
+        {
+            yield return file;
+        }
     }
 
-    public async Task DeleteFileAsync(string filename, CancellationToken cancellationToken)
+    public async Task DeleteFileAsync(
+        string filename, 
+        CancellationToken cancellationToken)
     {
         using HttpResponseMessage response = await _httpClient.DeleteAsync(
             $"{FileUrl}{filename}?key={apiKey}");

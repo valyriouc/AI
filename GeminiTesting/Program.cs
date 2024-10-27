@@ -10,14 +10,15 @@ internal static class Program
         string apiKey = (await File.ReadAllTextAsync(filepath)).Trim();
 
         GeminiFileUploader uploader = new(apiKey);
+        //
+        // GeminiFile file = new(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "joke.txt"));
+        // GeminiFileMetadata metadata = await uploader.UploadFileAsync(file, CancellationToken.None);
+        //
+        // string name = metadata.Name.Split("/")[1];
+        await foreach (var meta in uploader.ListFilesAsync(CancellationToken.None))
+        {
+            Console.WriteLine(meta.Name);
+        }
         
-        var result = await uploader.ListFilesAsync(CancellationToken.None);
-        Console.WriteLine(result);
-        
-        GeminiFile file = new(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "joke.txt"));
-        await uploader.UploadFileAsync(file, CancellationToken.None);
-        
-        result = await uploader.ListFilesAsync(CancellationToken.None);
-        Console.WriteLine(result);
     }
 }

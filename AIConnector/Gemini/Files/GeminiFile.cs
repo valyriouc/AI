@@ -1,4 +1,6 @@
-﻿namespace AIConnector.Gemini.Files;
+﻿using AIConnector.Common;
+
+namespace AIConnector.Gemini.Files;
 
 public readonly struct GeminiFile
 {
@@ -21,27 +23,7 @@ public readonly struct GeminiFile
         
         this.filepath = filepath;
         FileName = Path.GetFileName(filepath);
-        MimeType = DetermineFileType(FileName);
+        MimeType = Path.GetExtension(FileName).AsGeminiMimeType();
         FileBytes = File.ReadAllBytes(this.filepath);
-    }
-
-    private static GeminiFileMimeType DetermineFileType(string filename)
-    {
-        string extension = Path.GetExtension(filename);
-
-        return extension switch
-        {
-            ".md" => GeminiFileMimeType.Markdown,
-            ".pdf" => GeminiFileMimeType.Pdf,
-            ".txt" => GeminiFileMimeType.Text,
-            ".js" => GeminiFileMimeType.JavaScript,
-            ".py" => GeminiFileMimeType.Python,
-            ".html" or ".htm" or ".htmlx" => GeminiFileMimeType.Html,
-            ".css" => GeminiFileMimeType.Css,
-            ".xml" => GeminiFileMimeType.Xml,
-            ".rtf" => GeminiFileMimeType.Rtf,
-            ".csv" => GeminiFileMimeType.Csv,
-            _ => throw new GeminiException($"File type {extension} not supported!")
-        };
     }
 }
