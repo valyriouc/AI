@@ -1,7 +1,6 @@
 ﻿
 using System.Reflection;
-using AIConnector.Common;
-using AIConnector.Gemini;
+using AIConnector.Gemini.Files;
 
 internal static class Program
 {
@@ -10,16 +9,15 @@ internal static class Program
         string filepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "secret.txt");
         string apiKey = (await File.ReadAllTextAsync(filepath)).Trim();
 
-        GeminiModelBuilder builder = new GeminiModelBuilder()
-            .WithModelMode(GeminiMode.ContentGenerationStream)
-            .WithModelVariant(GeminiModelVariant.Flash15)
-            .WithApiKey(apiKey);
-
-        IModel model = builder.Build();
-        await foreach (string t in model.StreamContentAsync())
-        {
-            Console.WriteLine(t);
-            Console.WriteLine();    
-        }
+        GeminiFileUploader uploader = new(apiKey);
+        
+        var result = await uploader.ListFilesAsync(CancellationToken.None);
+        Console.WriteLine(result);
+        
+        GeminiFile file = new(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "joke.txt"));
+        await uploader.UploadFileAsync(file, CancellationToken.None);
+        
+        result = await uploader.ListFilesAsync(CancellationToken.None);
+        Console.WriteLine(result);
     }
 }

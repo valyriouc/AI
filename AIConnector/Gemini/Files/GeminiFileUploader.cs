@@ -10,23 +10,55 @@ public sealed class GeminiFileUploader(
     private const string UploadUrl = "https://generativelanguage.googleapis.com/upload/v1beta/files/";
     private const string FileUrl = "https://generativelanguage.googleapis.com/v1beta/files/";
 
-    private readonly HttpClient httpClient = new();
+    private readonly HttpClient _httpClient = new();
 
-    public async Task UploadFileAsync(GeminiFile file, CancellationToken cancellationToken)
+    /// <summary>
+    /// Uploads a file asynchronously to the gemini file API.
+    /// </summary>
+    /// <param name="file">The file that should be uploaded.</param>
+    /// <param name="cancellationToken">Token for cancellation.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the file metadata.</returns>
+    /// <exception cref="GeminiApiException">Thrown when there is an error during the upload process.</exception>
+    public async Task<string> UploadFileAsync(
+        GeminiFile file,
+        CancellationToken cancellationToken)
     {
         using HttpRequestMessage initRequest = CreateInitUploadRequest(file);
-        
-        using HttpResponseMessage response = await httpClient.SendAsync(initRequest, cancellationToken);
-        
-        await response.ThrowOnGeminiErrorAsync();
 
-        string uploadUrl = response.Headers.GetValues("x-goog-upload-url").First();
+        using HttpResponseMessage response = await _httpClient.SendAsync(
+            initRequest, 
+            cancellationToken);
 
-        using HttpRequestMessage finalizeRequest = CreateFinalizeUploadRequest(uploadUrl, file);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new GeminiApiException(
+                (uint)response.StatusCode, 
+                response.StatusCode.ToString(), 
+                "Initiate file upload failed!");
+        }
+
+        string uploadUrl = response.Headers
+            .GetValues("x-goog-upload-url")
+            .First();
         
-        using HttpResponseMessage finalize = await httpClient.SendAsync(finalizeRequest, cancellationToken);
+        using HttpRequestMessage finalizeRequest = CreateFinalizeUploadRequest(
+            uploadUrl, 
+            file);
         
-        await response.ThrowOnGeminiErrorAsync();
+        using HttpResponseMessage finalize = await _httpClient.SendAsync(
+            finalizeRequest, 
+            cancellationToken);
+
+        if (!finalize.IsSuccessStatusCode)
+        {
+            throw new GeminiApiException(
+                (uint)finalize.StatusCode,
+                finalize.StatusCode.ToString(),
+                "Uploading content failed!");
+        }
+        
+        return await finalize.Content
+            .ReadAsStringAsync(cancellationToken);
     }
 
     private HttpRequestMessage CreateInitUploadRequest(GeminiFile file)
@@ -35,7 +67,7 @@ public sealed class GeminiFileUploader(
         sb.Append($"?key={apiKey}");
         
         HttpRequestMessage request = new HttpRequestMessage(
-            HttpMethod.Get, 
+            HttpMethod.Post, 
             sb.ToString());
         
         request.Headers.Add("X-Goog-Upload-Protocol", "resumable");
@@ -48,7 +80,7 @@ public sealed class GeminiFileUploader(
             {
               "file": 
               {
-                "display_name": {{file.FileName}}
+                "display_name": "{{file.FileName}}"
               }  
             }
             """;
@@ -61,10 +93,10 @@ public sealed class GeminiFileUploader(
     private HttpRequestMessage CreateFinalizeUploadRequest(string baseUrl, GeminiFile file)
     {
         HttpRequestMessage message = new HttpRequestMessage(
-            HttpMethod.Get, 
-            $"{baseUrl}?key={apiKey}");
+            HttpMethod.Post, 
+            baseUrl);
         
-        message.Headers.Add("Content-Length", file.FileSize.ToString());
+        // message.Headers.Add("Content-Length", file.FileSize.ToString());
         message.Headers.Add("X-Goog-Upload-Offset", "0");
         message.Headers.Add("X-Goog-Upload-Command", "upload, finalize");
         
@@ -74,7 +106,7 @@ public sealed class GeminiFileUploader(
 
     public async Task<string> GetFileMetadataAsync(string filename, CancellationToken cancellationToken)
     {
-        using HttpResponseMessage response = await httpClient.GetAsync(
+        using HttpResponseMessage response = await _httpClient.GetAsync(
             $"{FileUrl}?key={apiKey}", 
             cancellationToken);
 
@@ -85,7 +117,7 @@ public sealed class GeminiFileUploader(
 
     public async Task<string> ListFilesAsync(CancellationToken cancellationToken)
     {
-        using HttpResponseMessage response = await httpClient.GetAsync(
+        using HttpResponseMessage response = await _httpClient.GetAsync(
             $"{FileUrl}?key={apiKey}",
             cancellationToken);
 
@@ -96,7 +128,7 @@ public sealed class GeminiFileUploader(
 
     public async Task DeleteFileAsync(string filename, CancellationToken cancellationToken)
     {
-        using HttpResponseMessage response = await httpClient.DeleteAsync(
+        using HttpResponseMessage response = await _httpClient.DeleteAsync(
             $"{FileUrl}{filename}?key={apiKey}");
         
         await response.ThrowOnGeminiErrorAsync();
@@ -105,6 +137,6 @@ public sealed class GeminiFileUploader(
     public void Dispose()
     {
         // TODO release managed resources here
-        httpClient.Dispose();
+        _httpClient.Dispose();
     }
 }
