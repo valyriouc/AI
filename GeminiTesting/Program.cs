@@ -1,10 +1,10 @@
 ﻿
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
 using AIConnector.Gemini.Files;
 
+// TODO: Json part parser
 internal static class Program
 {
     public static async Task Main()
@@ -44,25 +44,26 @@ internal static class Program
         
         using var response = await client.SendAsync(request);
 
-        // await using Stream stream = await response.Content.ReadAsStreamAsync();
+        await using Stream stream = await response.Content.ReadAsStreamAsync();
 
-        string content = await response.Content.ReadAsStringAsync();
-        Console.WriteLine(content);
-        // Memory<byte> buffer = new byte[1024];
-        // while (true)
-        // {
-        //     int wrote = stream.Read(buffer.Span);
-        //
-        //     if (wrote == 0)
-        //     {
-        //         break;
-        //     }
-        //     
-        //     Console.WriteLine($"Wrote {wrote} bytes");
-        //
-        //     string content = Encoding.UTF8.GetString(buffer[..wrote].Span);
-        //     Console.WriteLine(content);
-        // }
+        // string content = await response.Content.ReadAsStringAsync();
+        // Console.WriteLine(content);
+        Memory<byte> buffer = new byte[1024];
+        while (true)
+        {
+            int wrote = stream.Read(buffer.Span);
+        
+            if (wrote == 0)
+            {
+                break;
+            }
+            
+            Console.WriteLine($"Wrote {wrote} bytes");
+        
+            string content = Encoding.UTF8.GetString(buffer[..wrote].Span);
+            
+            Console.WriteLine(content);
+        }
     }
     
     private static async Task FileApiTesting(string apiKey)
