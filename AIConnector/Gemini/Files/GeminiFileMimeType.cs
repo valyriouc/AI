@@ -1,6 +1,5 @@
 ﻿namespace AIConnector.Gemini.Files;
 
-// TODO: Impl. the google file api for document working for gemini
 // https://ai.google.dev/gemini-api/docs/document-processing?lang=rest
 public enum GeminiFileMimeType
 {
