@@ -15,7 +15,7 @@ internal static class Program
         // GeminiFileMetadata metadata = await uploader.UploadFileAsync(file, CancellationToken.None);
         //
         // string name = metadata.Name.Split("/")[1];
-        await foreach (var meta in uploader.ListFilesAsync(CancellationToken.None))
+        await foreach (GeminiFileMetadata meta in uploader.ListFilesAsync(CancellationToken.None))
         {
             Console.WriteLine(meta.Name);
         }
