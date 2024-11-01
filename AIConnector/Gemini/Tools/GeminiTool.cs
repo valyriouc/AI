@@ -10,5 +10,4 @@ public class GeminiTool(
     public GoogleSearchRetrieval GoogleSearchRetrieval { get; } = googleSearchRetrieval;
 
     public CodeExecution CodeExecution { get; } = codeExecution;
-
 }
