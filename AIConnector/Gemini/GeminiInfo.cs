@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -8,7 +9,7 @@ public static class GeminiInfo
 {
     public static async IAsyncEnumerable<GeminiMetadata> GetModelsAsync(
         string apiKey,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(apiKey))
         {
