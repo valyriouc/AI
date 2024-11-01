@@ -4,15 +4,13 @@ using AIConnector.Common;
 namespace AIConnector.Gemini;
 
 public class GeminiModelBuilder : IModelBuilder
-{
-    private const string Baseurl = "https://generativelanguage.googleapis.com/v1beta/models/";
-    
+{ 
     private GeminiModelVariant _variant = GeminiModelVariant.None;
 
     private GeminiMode _geminiMode = GeminiMode.None;
 
     private string? _apiKey;
-
+    
     public GeminiModelBuilder WithApiKey(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -40,7 +38,7 @@ public class GeminiModelBuilder : IModelBuilder
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append(Baseurl);
+        sb.Append(GeminiConstants.ModelBaseUrl);
         
         if (this._variant == GeminiModelVariant.None)
         {

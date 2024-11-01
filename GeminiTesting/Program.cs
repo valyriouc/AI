@@ -2,9 +2,9 @@
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using AIConnector.Gemini;
 using AIConnector.Gemini.Files;
 
-// TODO: Json part parser
 internal static class Program
 {
     public static async Task Main()
@@ -12,9 +12,19 @@ internal static class Program
         string filepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "secret.txt");
         string apiKey = (await File.ReadAllTextAsync(filepath)).Trim();
 
-        await TestingStreaming(apiKey);
+        // await TestingStreaming(apiKey);
+        await TestingModelList(apiKey);
     }
 
+    private static async Task TestingModelList(string apiKey)
+    {
+        await foreach (var model in GeminiInfo.GetModelsAsync(apiKey))
+        {
+            Console.WriteLine(model.Name);
+            // Console.WriteLine(model.DisplayName);
+        }
+    }
+    
     private static async Task TestingStreaming(string apiKey)
     {
         using HttpRequestMessage request = new(HttpMethod.Post,

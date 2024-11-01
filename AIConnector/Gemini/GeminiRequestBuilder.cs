@@ -132,11 +132,8 @@ public sealed class GeminiRequestBuilder
         return this;
     }
 
-    public GeminiRequest Build()
-    {
-        return new GeminiRequest();
-    }
-    
+    public GeminiRequest Build() => new();
+
     #region Quick create
 
     public static GeminiRequest Create(string question)
