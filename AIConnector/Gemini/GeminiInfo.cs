@@ -6,7 +6,9 @@ namespace AIConnector.Gemini;
 
 public static class GeminiInfo
 {
-    public static async IAsyncEnumerable<GeminiMetadata> GetModelsAsync(string apiKey)
+    public static async IAsyncEnumerable<GeminiMetadata> GetModelsAsync(
+        string apiKey,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -21,10 +23,13 @@ public static class GeminiInfo
             sb.ToString());
         
         using HttpClient client = new HttpClient();
-        using HttpResponseMessage response = await client.SendAsync(request);
+        using HttpResponseMessage response = await client.SendAsync(
+            request, 
+            cancellationToken);
         
         GeminiPagedResult result = await response.Content
-            .ReadFromJsonAsync<GeminiPagedResult>();
+            .ReadFromJsonAsync<GeminiPagedResult>(
+                cancellationToken: cancellationToken);
 
         foreach (GeminiMetadata model in result.Models)
         {
@@ -34,7 +39,8 @@ public static class GeminiInfo
 
     public static async Task<GeminiMetadata> GetModelMetadataAsync(
         string apiKey, 
-        string modelName)
+        string modelName,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -55,9 +61,12 @@ public static class GeminiInfo
             sb.ToString());
         
         using HttpClient client = new HttpClient();
-        using HttpResponseMessage response = await client.SendAsync(request);
+        using HttpResponseMessage response = await client.SendAsync(
+            request, 
+            cancellationToken);
         
-        return await response.Content.ReadFromJsonAsync<GeminiMetadata>();
+        return await response.Content.ReadFromJsonAsync<GeminiMetadata>(
+            cancellationToken: cancellationToken);
     }
 }
 
