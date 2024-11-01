@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeminiTesting", "GeminiTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIConnector", "AIConnector\AIConnector.csproj", "{1B4ADC5A-80C3-413F-9A96-F269792BA1A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiConnectorTests", "AiConnectorTests\AiConnectorTests.csproj", "{C7C2A562-AAE6-44F3-9B09-765B91FCA503}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{1B4ADC5A-80C3-413F-9A96-F269792BA1A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B4ADC5A-80C3-413F-9A96-F269792BA1A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B4ADC5A-80C3-413F-9A96-F269792BA1A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7C2A562-AAE6-44F3-9B09-765B91FCA503}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7C2A562-AAE6-44F3-9B09-765B91FCA503}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7C2A562-AAE6-44F3-9B09-765B91FCA503}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7C2A562-AAE6-44F3-9B09-765B91FCA503}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
