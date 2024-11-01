@@ -1,9 +1,16 @@
 ﻿namespace AIConnector.Gemini;
 
-public readonly struct GeminiFunctionResponsePart(string name) : IGeminiRequestPart
+public readonly struct GeminiFunctionResponsePart(
+    string name, 
+    GeminiFunctionResponse response) : IGeminiRequestPart
 {
     public string Name { get; } = name;
 
-    // TODO: Impl. response struct 
-    // https://ai.google.dev/api/caching#Part
+    public GeminiFunctionResponse Response { get; } = response;
 }
+
+public readonly struct GeminiFunctionResponse
+{
+    
+}
+

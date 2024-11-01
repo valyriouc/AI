@@ -1,7 +1,8 @@
 ﻿namespace AIConnector.Gemini;
 
-
-public readonly struct ExecutableCodePart(GeminiExeCodeLanguage language, string code) : IGeminiRequestPart
+public readonly struct ExecutableCodePart(
+    GeminiExeCodeLanguage language, 
+    string code) : IGeminiRequestPart
 {
     public GeminiExeCodeLanguage Language { get; } = language;
 
