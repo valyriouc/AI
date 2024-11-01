@@ -132,7 +132,7 @@ public sealed class GeminiRequestBuilder
         return this;
     }
 
-    public GeminiRequest Build() => new();
+    public GeminiRequest Build() => throw new NotImplementedException();
 
     #region Quick create
 
