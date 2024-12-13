@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Ollama;
@@ -9,13 +10,13 @@ public enum ResponseState
     Failure
 }
 
-public struct AIResponse
+public class AiResponse
 {
     public ResponseState State { get; }
     
     public string Content { get; }
 
-    internal AIResponse(ResponseState state, string content)
+    internal AiResponse(ResponseState state, string content)
     {
         State = state;
         Content = content;
@@ -36,6 +37,7 @@ public class OllamaModel : IDisposable
 
         public string PromptTemplate { get; }
         
+        [JsonPropertyName("stream")]
         public bool Streaming { get; } = false;
 
         public ModelRequest(string model, string prompt, string format, string systemMessage, string promptTemplate, bool streaming)
@@ -48,19 +50,18 @@ public class OllamaModel : IDisposable
             Streaming = streaming;
         }
     }
-    
-    internal struct ModelResponse
-    {
-        public string Model { get; }
-        
-        public string Response { get; }
 
-        [JsonConstructor]
-        public ModelResponse(string model, string response)
-        {
-            Model = model;
-            Response = response;
-        }
+    [method: JsonConstructor]
+    internal class ModelResponse(string model, string response, bool done)
+    {
+        [JsonPropertyName("model")]
+        public string Model { get; } = model;
+
+        [JsonPropertyName("response")]
+        public string Response { get; } = response;
+
+        [JsonPropertyName("done")] 
+        public bool Done { get; } = done;
     }
     
     public string Name { get; }
@@ -79,7 +80,7 @@ public class OllamaModel : IDisposable
     
     public OllamaModel(
         string name, 
-        string format="Json",
+        string format="json",
         string baseUrl = "http://localhost:11434/api/generate",
         string systemMessage="", 
         string promptTemplate="",
@@ -105,7 +106,7 @@ public class OllamaModel : IDisposable
         _httpClient = new HttpClient();
     }
     
-    public async Task<AIResponse> RunAsync(string prompt, CancellationToken cancellationToken)
+    public async Task<AiResponse> RunAsync(string prompt, CancellationToken cancellationToken)
     {
         ModelRequest request = new ModelRequest(
             Name,
@@ -119,9 +120,11 @@ public class OllamaModel : IDisposable
         
         try
         {
+            var payload = JsonContent.Create(request);
             using HttpResponseMessage response = await _httpClient.PostAsync(
                 url, 
-                JsonContent.Create<ModelRequest>(request), cancellationToken);
+                payload, 
+                cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -130,19 +133,31 @@ public class OllamaModel : IDisposable
                      Request to ollama model {Name} failed with status code {response.StatusCode}
                      Response: {await response.Content.ReadAsStringAsync(cancellationToken)}
                      """;
-                return new AIResponse(
+                return new AiResponse(
                     ResponseState.Failure,
                     errorText);
             }
+
+            var debug = await response.Content.ReadAsStringAsync(cancellationToken);
+            ModelResponse? result = await response.Content.ReadFromJsonAsync<ModelResponse>(new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            }, cancellationToken);
+
+            if (result is null)
+            {
+                return new AiResponse(
+                    ResponseState.Failure,
+                    "Could not parse response from ollama model");
+            }
             
-            ModelResponse result = await response.Content.ReadFromJsonAsync<ModelResponse>(cancellationToken);
-            return new AIResponse(
+            return new AiResponse(
                 ResponseState.Success,
                 result.Response);
         }
         catch (Exception e)
         {
-            return new AIResponse(
+            return new AiResponse(
                 ResponseState.Failure,
                 e.Message);
         }
