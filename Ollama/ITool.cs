@@ -4,6 +4,8 @@ public interface ITool
 {
     public string GetDescription();
 
+    public string GetInputFormat();
+
     public Task<string> ExecuteAsync(string input);
 }
 
@@ -14,12 +16,22 @@ public class FileStorerTool : ITool
         string desc =
             """
             This tool can store data in a file on the file system.
-            The input for the tool:
-            
-            "file_name": "file_name",
-            "data": "data"
             """;
         
+        return desc;
+    }
+
+    public string GetInputFormat()
+    {
+        string desc =
+            """ 
+            {
+                "file_name": "the_name_of_the_file",
+                "data": "the_data_to_store",
+                "file_extension": "the_file_extension"
+            }
+            """;
+
         return desc;
     }
 

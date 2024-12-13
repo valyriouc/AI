@@ -46,10 +46,22 @@ public class ToolBox
     {
         StringBuilder sb = new();
 
+        sb.AppendLine("[");
+        
         foreach (KeyValuePair<string, ITool> item in _tools)
         {
-            sb.AppendLine($"- {item.Key}: {item.Value.GetDescription()}");
+            string json =
+                $$"""
+                {
+                    "tool_name": "{{item.Key}}",
+                    "tool_description: "{{item.Value.GetDescription()}}",
+                    "tool_input": {{item.Value.GetInputFormat()}}
+                }
+                """;
+            sb.AppendLine(json);
         }
+
+        sb.AppendLine("]");
 
         return sb.ToString();
     }
