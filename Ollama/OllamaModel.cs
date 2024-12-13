@@ -138,7 +138,6 @@ public class OllamaModel : IDisposable
                     errorText);
             }
 
-            var debug = await response.Content.ReadAsStringAsync(cancellationToken);
             ModelResponse? result = await response.Content.ReadFromJsonAsync<ModelResponse>(new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true

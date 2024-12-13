@@ -48,7 +48,7 @@ public class ToolBox
 
         foreach (KeyValuePair<string, ITool> item in _tools)
         {
-            sb.AppendLine($"{item.Key}: {item.Value.GetDescription()}");
+            sb.AppendLine($"- {item.Key}: {item.Value.GetDescription()}");
         }
 
         return sb.ToString();

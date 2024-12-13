@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama", "Ollama\Ollama.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OllamaTests", "OllamaTests\OllamaTests.csproj", "{CDE8A3DB-688B-4506-A318-64A9DF92D375}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAgent", "TestAgent\TestAgent.csproj", "{440C6C37-BA10-47FF-9646-06D07AA9E99D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{CDE8A3DB-688B-4506-A318-64A9DF92D375}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDE8A3DB-688B-4506-A318-64A9DF92D375}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDE8A3DB-688B-4506-A318-64A9DF92D375}.Release|Any CPU.Build.0 = Release|Any CPU
+		{440C6C37-BA10-47FF-9646-06D07AA9E99D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{440C6C37-BA10-47FF-9646-06D07AA9E99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{440C6C37-BA10-47FF-9646-06D07AA9E99D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{440C6C37-BA10-47FF-9646-06D07AA9E99D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
