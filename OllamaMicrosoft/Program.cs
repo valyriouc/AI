@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
@@ -39,7 +38,7 @@ public class FileStorageTool : IAgentTool
         var guid = Guid.NewGuid();
         var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, $"{guid}.txt");
         await File.WriteAllTextAsync(path, request.Input);
-        return new ChatMessage(ChatRole.Tool, "File was created under path !"); 
+        return new ChatMessage(ChatRole.Tool, $"File was created under path {path}!");
     }
 }
 
@@ -63,6 +62,12 @@ class Program
         {
             Console.WriteLine("Your prompt: ");
             string? userPrompt = Console.ReadLine();
+            
+            if (string.IsNullOrWhiteSpace(userPrompt))
+            {
+                Console.WriteLine("Input cannot be empty. Please try again.");
+                continue;
+            }
             messages.Add(new ChatMessage(ChatRole.User, userPrompt));
 
             CancellationTokenSource cts = new();
@@ -73,25 +78,19 @@ class Program
                                messages, new ChatOptions() { ResponseFormat = new ChatResponseFormatText()},
                                cancellationToken: cts.Token))
             {
-                Console.Write(item.Text);
                 response += item.Text;
             }
-
-            try
+            
+            var codes = SourceCodeExtractor.Extract(response);
+            if (codes.Any())
             {
-                ToolRequest? tooling = JsonSerializer.Deserialize<ToolRequest>(response, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true});
-                if (tooling is null)
+                foreach (var code in codes)
                 {
-                    continue;
+                    Console.Write(code);
+                    Console.WriteLine();
                 }
-                var toolResponse = await tool.RunAsync(tooling);
-                messages.Add(toolResponse);
-                Console.WriteLine(toolResponse.Text);
+
                 continue;
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine(ex.Message);
             }
             
             messages.Add(new ChatMessage(ChatRole.Assistant, response));
