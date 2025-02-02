@@ -1,63 +1,69 @@
-﻿using System.Reflection;
+﻿using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
 
 namespace OllamaMicrosoft;
 
-public class ToolRequest
+public class Agent : IDisposable
 {
-    public string Tool { get; }
+    private readonly Dictionary<string, IAgentTool> _tools;
 
-    public string Input { get; }
-
-    [JsonConstructor]
-    public ToolRequest(string tool, string input)
-    {
-        Tool = tool;
-        Input = input;
-    }
-}
-
-public interface IAgentTool
-{
-    public Task<ChatMessage> RunAsync(ToolRequest request);
-}
-
-public class FileStorageTool : IAgentTool
-{
-    private const string ToolName = nameof(FileStorageTool);
+    private readonly IChatClient _chatClient;
     
-    public async Task<ChatMessage> RunAsync(ToolRequest request)
+    private IEnumerable<(string, string)> ToolDescriptions => _tools.Select(x => (x.Value.Name, x.Value.GetDescription()));
+
+    private List<ChatMessage> _chatHistory = [];
+    
+    public Agent(
+        IChatClient chatClient,
+        Dictionary<string, IAgentTool> tools)
     {
-        if (request.Tool != ToolName)
-        {
-            throw new Exception("Invalid tool name");
-        }
-        
-        var guid = Guid.NewGuid();
-        var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, $"{guid}.txt");
-        await File.WriteAllTextAsync(path, request.Input);
-        return new ChatMessage(ChatRole.Tool, $"File was created under path {path}!");
+        this._chatClient = chatClient;
+        this._tools = tools;
     }
-}
 
-class Program
-{
-    static async Task Main(string[] args)
+    private string GetAgentDescription()
     {
-        using IChatClient chatClient = new OllamaChatClient(
-            new Uri("http://localhost:11434/"),
-            "llama3.2");
+        StringBuilder sb = new StringBuilder();
 
-        FileStorageTool tool = new();
-        List<ChatMessage> messages = new();
+        foreach ((string name, string description) in ToolDescriptions)
+        {
+            sb.AppendLine(
+                $"""
+                {name}:
+                {description}
+                """);
+        }
 
-        messages.Add(
-            new ChatMessage(
-                ChatRole.Assistant, 
-                "You are an assistant that is able to create files. If you are asked to create a file, please respond with the following json scheme: { \"tool\": \"FileStorageTool\", \"input\": \"The content which should be stored\" }. The json must be valid so it can be understood by the tool. You only use this tool if it is necessary or when the user asks you to do so."));
-       
+        string prompt =
+            $$"""
+              You are an assistant that helps processing user requests by determining the appropriate action and arguments based 
+              on the users request. You have access to the following tools:
+
+              Available tools:
+              {{sb.ToString()}}    
+
+              Instructions:
+              - Decide whether to use a tool or respond to the user directly.
+              - You always respond with the following JSON object with "tool" and "input" fields
+              - If you choose to respond to the user directly, set "tool" to "user_response" and "input" to the content of the response
+              - **Important**: Provide the response **only** as a valid JSON object. Do not include any additional text or formatting. Do **not** use a markdown code block to wrap the valid JSON object in
+              - Ensure that the JSON is properly formatted without any syntax errors.
+
+              Response format:
+              {
+                  "tool": "<tool_name>",
+                  "input": "<input>",
+              }
+              """;
+
+        return prompt;
+    }
+    
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        _chatHistory.Add(new ChatMessage(ChatRole.System, GetAgentDescription()));
+        
         while (true)
         {
             Console.WriteLine("Your prompt: ");
@@ -68,33 +74,58 @@ class Program
                 Console.WriteLine("Input cannot be empty. Please try again.");
                 continue;
             }
-            messages.Add(new ChatMessage(ChatRole.User, userPrompt));
+            
+            _chatHistory.Add(new ChatMessage(ChatRole.User, userPrompt));
 
             CancellationTokenSource cts = new();
             Console.WriteLine("Ai response: ");
             string response = "";
             
-            await foreach (StreamingChatCompletionUpdate item in chatClient.CompleteStreamingAsync(
-                               messages, new ChatOptions() { ResponseFormat = new ChatResponseFormatText()},
+            await foreach (StreamingChatCompletionUpdate item in _chatClient.CompleteStreamingAsync(
+                               _chatHistory, new ChatOptions() { ResponseFormat = new ChatResponseFormatText()},
                                cancellationToken: cts.Token))
             {
                 response += item.Text;
             }
-            
-            var codes = SourceCodeExtractor.Extract(response);
-            if (codes.Any())
-            {
-                foreach (var code in codes)
-                {
-                    Console.Write(code);
-                    Console.WriteLine();
-                }
 
-                continue;
-            }
+            await HandleResponseAsync(response, cancellationToken);
             
-            messages.Add(new ChatMessage(ChatRole.Assistant, response));
+            _chatHistory.Add(new ChatMessage(ChatRole.Assistant, response));
             Console.WriteLine();
         }
+    }
+
+    private async Task HandleResponseAsync(string response, CancellationToken cancellationToken)
+    {
+        Console.WriteLine(response);
+        var request = JsonSerializer.Deserialize<ToolRequest>(response, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true});
+        if (this._tools.TryGetValue(request!.Tool, out IAgentTool? tool))
+        {
+            await tool!.RunAsync(request, cancellationToken);
+            return;
+        }
+        
+        Console.WriteLine(request.Input);
+    }
+
+    public void Dispose() => this._chatClient.Dispose();
+}
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        IChatClient chatClient = new OllamaChatClient(
+            new Uri("http://localhost:11434/"),
+            "llama3.2");
+        
+        FileStorageTool tool = new();
+        
+        using Agent agent = new(chatClient, new Dictionary<string, IAgentTool>()
+        {
+            { tool.Name, tool}
+        });
+        
+        await agent.RunAsync(CancellationToken.None);
     }
 }
