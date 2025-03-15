@@ -10,3 +10,6 @@
 **/.vscode
 **/__pycache__
 **/logs
+
+**/chroma.log
+**/chroma_data
