@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -50,15 +51,17 @@ class Program
                 if (first)
                 {
                     first = false;
-                    sb.Append(emb);   
+                    sb.Append(emb.ToString(CultureInfo.InvariantCulture).Replace(",", "."));   
                 }
                 else
-                    sb.Append(emb + ",");
+                    sb.Append("," + emb.ToString(CultureInfo.InvariantCulture).Replace(",", "."));
             }
             
             embeddings.Add(sb.ToString());
             sb.Clear();
         }
+        
+
 
         using HttpClient client = new();
         using HttpRequestMessage request = new();
