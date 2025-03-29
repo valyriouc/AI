@@ -14,9 +14,5 @@ public class IndexModel : PageModel
     }
 
     public IActionResult OnGet() => Page();
-
-    public async Task<IActionResult> OnPostAsync()
-    {
-        OllamaChatClient client = new OllamaChatClient()
-    }
+    
 }
